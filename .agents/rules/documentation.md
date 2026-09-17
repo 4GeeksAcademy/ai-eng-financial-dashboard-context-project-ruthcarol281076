@@ -1,7 +1,16 @@
 # Reglas de documentacion
 
+## Nombre
+Documentacion operativa y trazabilidad tecnica.
+
 ## Alcance
 Aplica a cambios de arquitectura, ejecucion, API, Docker, contratos de datos y decisiones que afecten a colaboradores o agentes.
+
+## Justificacion
+El proyecto se ejecuta con dos servicios, varios entry points y variables de entorno para el proxy. La documentacion debe permitir reproducir el arranque y rastrear cada afirmacion hasta el codigo o una validacion.
+
+## Guia especifica del proyecto
+Mantener sincronizados `README.md`, `README.es.md` y `verification.md`; documentar `5173`, `8000`, `5678`, `/docs`, `VITE_API_BASE_URL` y `VITE_PROXY_TARGET` cuando se modifique la ejecucion o la conexion.
 
 ## Reglas
 

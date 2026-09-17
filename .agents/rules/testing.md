@@ -1,7 +1,16 @@
 # Reglas de testing
 
+## Nombre
+Pruebas unitarias, de API e integracion.
+
 ## Alcance
 Aplica a cualquier cambio de comportamiento en backend, frontend o contratos de API.
+
+## Justificacion
+Los calculos financieros y los filtros de la API son comportamiento critico. El repositorio ya dispone de pruebas con Vitest y pytest que deben evolucionar junto con el codigo.
+
+## Guia especifica del proyecto
+Usa `frontend/src/lib/financial-utils.test.ts` para calculos y formateadores, `backend/tests/test_routes.py` para endpoints y `curl` contra `8000` y `5173` cuando cambie la integracion Docker/Vite.
 
 ## Reglas
 

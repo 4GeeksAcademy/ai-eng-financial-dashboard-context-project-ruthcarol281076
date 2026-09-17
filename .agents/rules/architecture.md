@@ -1,7 +1,16 @@
 # Reglas de arquitectura
 
+## Nombre
+Arquitectura y limites entre servicios.
+
 ## Alcance
 Aplica a cambios en `backend/`, `frontend/` y `docker-compose.yml`.
+
+## Justificacion
+El proyecto separa una interfaz React/Vite de una API FastAPI y usa Docker Compose para conectarlas. Mantener esos limites evita acoplamientos accidentales y fallos de integracion.
+
+## Guia especifica del proyecto
+Conserva `backend/app/main.py` como composicion de FastAPI, `backend/app/routes.py` como superficie HTTP actual, `frontend/src/App.tsx` como coordinador de la pantalla y `/api` como entrada del proxy de Vite. Todo cambio de Docker debe validarse con los puertos `5173`, `8000` y `5678`.
 
 ## Reglas
 

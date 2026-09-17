@@ -1,7 +1,16 @@
 # Reglas de experiencia de desarrollo
 
+## Nombre
+Experiencia de desarrollo y flujo de agentes.
+
 ## Alcance
 Aplica al trabajo diario de colaboradores y agentes en el workspace.
+
+## Justificacion
+La validacion depende de Docker Compose, las dependencias locales del frontend y los archivos de instrucciones para agentes. Un flujo comun reduce diagnosticos incompletos y diferencias entre entornos.
+
+## Guia especifica del proyecto
+Antes de editar revisa `AGENTS.md` y `.agents/rules/`; para validar la aplicacion usa `docker compose up -d --build`, `docker compose ps`, los logs de los servicios y los scripts definidos en `frontend/package.json`.
 
 ## Reglas
 

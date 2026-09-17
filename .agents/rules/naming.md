@@ -1,7 +1,16 @@
 # Reglas de naming y organizacion
 
+## Nombre
+Naming, contratos y organizacion de modulos.
+
 ## Alcance
 Aplica a nombres de archivos, funciones, tipos, componentes, endpoints y variables.
+
+## Justificacion
+El frontend y el backend comparten conceptos financieros y una convencion de imports con alias. Los nombres consistentes reducen errores al cruzar contratos entre Python y TypeScript.
+
+## Guia especifica del proyecto
+Usa los nombres de dominio existentes como `FinancialMovement`, `income`, `outcome`, `B2B` y `B2C`; conserva archivos de componentes en `kebab-case`, componentes React en `PascalCase` y el alias `@/` dentro de `frontend/src`.
 
 ## Reglas
 
