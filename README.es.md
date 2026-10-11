@@ -49,6 +49,30 @@ Si necesitas apuntar a otro backend, copia `frontend/.env.example` como `.env` y
 - Backend: http://localhost:8000
 - Documentación API: http://localhost:8000/docs
 
+### Inicio manual en dos terminales
+
+Usa este flujo cuando no tengas Docker o Docker Compose disponible, cuando necesites depurar solo uno de los servicios o cuando quieras revisar por separado los logs del frontend y del backend. Instala primero Python 3.13+, Node.js y npm.
+
+En la terminal 1, inicia el backend:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+En la terminal 2, inicia el frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abre http://localhost:5173. En esta configuración local, Vite redirige las peticiones `/api` a `http://localhost:8000`, por lo que no necesitas definir `VITE_PROXY_TARGET`. El comando manual normal del backend no abre el puerto de depuración `5678`; usa el flujo de Docker Compose cuando necesites esa configuración de depuración.
+
 ---
 
 Este y muchos otros proyectos son construidos por estudiantes como parte de los [Coding Bootcamps](https://4geeksacademy.com/) de 4Geeks Academy. Encuentra más acerca de los [cursos](https://4geeksacademy.com/es/comparar-programas) de [Ingeniería de IA](https://4geeksacademy.com/es/coding-bootcamps/ingenieria-ia), [Data Science & Machine Learning](https://4geeksacademy.com/es/coding-bootcamps/curso-datascience-machine-learning), [Ciberseguridad](https://4geeksacademy.com/es/coding-bootcamps/curso-ciberseguridad) y [Full-Stack Software Developer con IA](https://4geeksacademy.com/es/coding-bootcamps/programador-full-stack).
