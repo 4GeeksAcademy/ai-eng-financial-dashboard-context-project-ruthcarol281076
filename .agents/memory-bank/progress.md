@@ -81,3 +81,44 @@ El build mantiene el warning de Vite sobre un chunk mayor de 500 kB. No se ejecu
 - La prueba directa del navegador confirmo el bloqueo: falta `libatk-1.0.so.0`.
 - Se detuvo el servidor temporal de Vite. No quedan procesos iniciados por esta auditoria.
 - Para completar Lighthouse en otro entorno se requiere instalar las dependencias del sistema de Chromium o ejecutar la auditoria desde un contenedor con navegador y librerias incluidas.
+
+## Mejora de rendimiento React
+
+### Skill aplicada
+
+- `vercel-react-best-practices` (`.agents/skills/vercel-react-best-practices/SKILL.md`), con foco en `bundle-dynamic-imports`, `rerender-derived-state`, `js-combine-iterations` y fetching cliente.
+
+### Cambios realizados
+
+- `frontend/src/App.tsx`: los gráficos se cargan con `lazy` y `Suspense`, separando Recharts de la carga inicial. Se añadió un fallback con dimensiones estables para evitar saltos visuales.
+- `frontend/src/App.tsx`: el fetch usa `AbortController`; los abortos durante desmontaje o StrictMode no se muestran como errores y no alteran el estado de carga.
+- `frontend/src/lib/financial-utils.ts`: `computeKPIs` pasó de dos pares de `filter`/`reduce` a un único recorrido; `formatCurrency` reutiliza un `Intl.NumberFormat` a nivel de módulo.
+- No se añadió memoización general, SWR ni dependencias nuevas: no había evidencia de renders excesivos ni de un waterfall de red.
+- Se conservaron las tablas accesibles de ambos gráficos, los estados de loading/error/empty, los contratos de API y el idioma inglés.
+
+### Cambios verificados
+
+Ejecutados desde `frontend/`:
+
+- `npm test` -> correcto: 1 archivo y 5 pruebas superadas.
+- `npm run lint` -> correcto.
+- `npm run build` -> correcto: TypeScript y Vite finalizaron sin errores.
+- El bundle inicial pasó de aproximadamente 586 kB a `188.25 kB`; Recharts quedó dividido en un chunk compartido de `342.30 kB` y chunks específicos de `10.48 kB` y `7.31 kB`.
+- `git diff --check` -> correcto.
+- Lighthouse/axe y la prueba con lector de pantalla continúan bloqueados por las librerías nativas ausentes de Chromium en el contenedor; el bloqueo ya está documentado en la sección de verificación renderizada.
+
+### Evidencia detallada y alcance
+
+- Baseline de performance: los imports estáticos de Recharts en los dos componentes de gráficos mantenían la librería dentro de la carga inicial; Vite reportaba un chunk de aproximadamente 586 kB.
+- Resultado posterior: `index-BMkgrlMw.js` quedó en `188.25 kB`; Recharts se separó en `LineChart-C065pquH.js` (`342.30 kB`), `income-outcome-chart-DfrZEVGI.js` (`10.48 kB`) y `profit-percent-chart-ZDZcTXnV.js` (`7.31 kB`). Los nombres son artefactos generados y pueden cambiar entre builds.
+- Archivos de aplicación modificados: `frontend/src/App.tsx`, `frontend/src/lib/financial-utils.ts` y este registro. No se modificaron backend, rutas HTTP, tipos de API, Docker ni dependencias de `frontend/package.json`.
+- `get_errors` -> sin errores en `App.tsx` ni `financial-utils.ts` después de los cambios.
+- Las pruebas existentes de `financial-utils.ts` cubren KPI, datos sin ingresos, orden cronológico, moneda y porcentajes; las cinco continúan superando la ejecución.
+- La cancelación del fetch se validó mediante TypeScript, lint y build; no se ejecutó una prueba de desmontaje en navegador por el bloqueo de Chromium.
+- La alternativa accesible de datos permanece intacta: las tablas `sr-only` siguen siendo generadas por ambos componentes después de cargar sus chunks.
+
+### Estado
+
+- Implementación de performance: completada.
+- Validación estática y de build: completada.
+- Validación visual automatizada con Lighthouse/axe y lector de pantalla: pendiente por dependencias nativas del navegador en el entorno actual.
