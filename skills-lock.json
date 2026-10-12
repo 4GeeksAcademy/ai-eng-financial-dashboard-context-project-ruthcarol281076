@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+    },
+    "backend-engineer": {
+      "source": "siviter-xyz/dot-agent",
+      "sourceType": "github",
+      "skillPath": "skills/backend-engineer/SKILL.md",
+      "computedHash": "cb334c90d6521d716860c38f5043f5e9726130f69cc429781ae145e65c29a671"
     }
   }
 }

@@ -168,3 +168,28 @@ Ejecutados desde `frontend/`:
 - `aria-hidden-focus` -> `score: 1`, sin elementos fallidos.
 - `definition-list` -> `score: 1`, sin elementos fallidos.
 - El reporte raíz `lighthouse-accessibility.json` conserva el reporte anterior; el resultado vigente es el archivo generado desde `frontend/`.
+
+## Mejora de seguridad y rendimiento del backend
+
+### Cambios realizados
+
+- `backend/app/main.py`: CORS explícito mediante `CORS_ALLOWED_ORIGINS`, hosts permitidos mediante `ALLOWED_HOSTS`, métodos/headers restringidos y cabeceras defensivas. HSTS solo se activa en producción sobre HTTPS.
+- `backend/app/routes.py`: RNG local sin mutar el estado global, caché diaria acotada para el dataset mock y validación común de rangos de fechas y `threshold`.
+- `backend/tests/test_routes.py`: pruebas de cabeceras, CORS, hosts, límites `422` y aislamiento del RNG.
+- `backend/Dockerfile`: usuario no root y comando seguro por defecto sin debugpy ni `--reload`.
+- `docker-compose.yml`: debugpy y `--reload` quedan explícitos en el flujo de desarrollo; se documentan las variables de entorno del backend.
+- `backend/requirements.txt`: versiones directas fijadas según el entorno validado.
+- `README.md`, `README.es.md` y `verification.md`: documentación de seguridad, configuración y evidencias.
+
+### Evidencias
+
+- `pytest` -> 22 pruebas superadas.
+- `python -m compileall app` -> correcto desde `backend/`.
+- `python -m pip check` -> correcto.
+- `docker compose config` -> correcto.
+- `/health` -> HTTP 200.
+- `/api/metrics` a través del proxy Vite -> HTTP 200 y 360 registros.
+- `npm run lint`, `npm test` y `npm run build` -> correctos; se conservaron lazy loading, chunks separados y accesibilidad React.
+- `git diff --check` -> correcto.
+- `pip-audit` queda pendiente porque no está instalado.
+- La construcción Docker queda bloqueada por un error interno reproducible de BuildKit (`parent snapshot ... does not exist`) durante `COPY requirements.txt`, antes de ejecutar el Dockerfile.

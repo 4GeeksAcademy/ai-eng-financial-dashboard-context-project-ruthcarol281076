@@ -127,3 +127,31 @@ GET http://localhost:5173/api/metrics  -> HTTP 200
 También se comprobó desde el contenedor frontend que `http://host.docker.internal:8000/health` devuelve `{"status":"ok"}`.
 
 Con estos ajustes, el frontend puede obtener los movimientos financieros del backend a través del proxy de Vite y la pantalla deja de mostrar el mensaje de error de carga.
+
+## Endurecimiento y optimización del backend
+
+### Cambios aplicados
+
+- [backend/app/main.py](backend/app/main.py) ahora configura CORS mediante `CORS_ALLOWED_ORIGINS`, limita los hosts mediante `ALLOWED_HOSTS` y añade cabeceras defensivas. Las credenciales quedan desactivadas porque todavía no existe autenticación por cookies.
+- [backend/app/routes.py](backend/app/routes.py) usa un generador aleatorio local, cachea el dataset mock determinista por fecha y valida rangos de fechas y el límite superior de `threshold`.
+- [backend/Dockerfile](backend/Dockerfile) ejecuta Uvicorn sin debug ni `--reload` por defecto y usa un usuario sin privilegios. [docker-compose.yml](docker-compose.yml) conserva debugpy en `5678` únicamente para desarrollo.
+- [backend/requirements.txt](backend/requirements.txt) fija las versiones directas instaladas para reproducibilidad.
+- [README.md](README.md) y [README.es.md](README.es.md) documentan `APP_ENV`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, los puertos y la separación entre desarrollo y producción.
+
+### Validaciones
+
+- `pytest` -> 22 pruebas superadas.
+- `python -m compileall app` desde `backend/` -> correcto.
+- `python -m pip check` -> no se encontraron dependencias rotas.
+- `docker compose config` -> correcto.
+- `curl http://localhost:8000/health` -> HTTP 200.
+- `curl http://localhost:5173/api/metrics` -> HTTP 200 y 360 registros.
+- `cd frontend && npm run lint` -> correcto.
+- `cd frontend && npm test` -> 5 pruebas superadas.
+- `cd frontend && npm run build` -> correcto; el chunk inicial permanece en `188.36 kB` y los chunks de gráficos siguen separados.
+- `git diff --check` -> correcto.
+
+### Pendientes del entorno
+
+- `pip-audit` no está instalado en el entorno, por lo que la auditoría de vulnerabilidades de dependencias debe ejecutarse cuando la herramienta esté disponible.
+- `docker compose build backend` y la variante `--no-cache` fallan en BuildKit durante `COPY requirements.txt` con `parent snapshot ... does not exist`; el fallo ocurre antes de ejecutar el Dockerfile y no se ha atribuido al código.

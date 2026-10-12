@@ -3,9 +3,10 @@ from __future__ import annotations
 import random
 from collections import defaultdict
 from datetime import date, timedelta
+from functools import lru_cache
 from typing import Literal
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -16,6 +17,7 @@ BusinessType = Literal["B2B", "B2C"]
 GroupBy = Literal["day", "week", "month"]
 
 OUTCOME_CATEGORIES = ["suppliers", "operational", "administrative", "others"]
+MAX_DATE_RANGE_DAYS = 366
 
 router = APIRouter()
 
@@ -75,19 +77,23 @@ def _year_for_month(month: int, today: date) -> int:
     return today.year - 1
 
 
-def _build_movement(month: int, income_probability: float, today: date) -> FinancialMovement:
-    operation_type: OperationType = "income" if random.random(
-    ) < income_probability else "outcome"
-    movement_day = random.randint(1, 28)
+def _build_movement(
+    month: int,
+    income_probability: float,
+    today: date,
+    rng: random.Random,
+) -> FinancialMovement:
+    operation_type: OperationType = "income" if rng.random() < income_probability else "outcome"
+    movement_day = rng.randint(1, 28)
     movement_date = date(_year_for_month(month, today), month, movement_day)
-    business_type: BusinessType = "B2B" if random.random() < 0.55 else "B2C"
+    business_type: BusinessType = "B2B" if rng.random() < 0.55 else "B2C"
 
     if operation_type == "income":
-        category: Category = "sales" if random.random() < 0.9 else "others"
-        amount = round(random.uniform(800, 12000), 2)
+        category: Category = "sales" if rng.random() < 0.9 else "others"
+        amount = round(rng.uniform(800, 12000), 2)
     else:
-        category = random.choice(OUTCOME_CATEGORIES)
-        amount = round(random.uniform(500, 9000), 2)
+        category = rng.choice(OUTCOME_CATEGORIES)
+        amount = round(rng.uniform(500, 9000), 2)
 
     return FinancialMovement(
         create_date=movement_date,
@@ -98,17 +104,45 @@ def _build_movement(month: int, income_probability: float, today: date) -> Finan
     )
 
 
-def generate_mock_movements(seed: int | None = None) -> list[FinancialMovement]:
-    if seed is not None:
-        random.seed(seed)
-    today = date.today()
+def generate_mock_movements(
+    seed: int | None = None,
+    today: date | None = None,
+) -> list[FinancialMovement]:
+    rng = random.Random(seed)
+    generation_date = today or date.today()
     movements: list[FinancialMovement] = []
     for month in range(1, 13):
-        income_probability = random.uniform(0.45, 0.7)
+        income_probability = rng.uniform(0.45, 0.7)
         for _ in range(30):
-            movements.append(_build_movement(month, income_probability, today))
+            movements.append(
+                _build_movement(month, income_probability, generation_date, rng)
+            )
     movements.sort(key=lambda item: item.create_date)
     return movements
+
+
+@lru_cache(maxsize=2)
+def get_cached_movements(generation_date: date) -> tuple[FinancialMovement, ...]:
+    return tuple(generate_mock_movements(seed=42, today=generation_date))
+
+
+def get_current_movements() -> tuple[FinancialMovement, ...]:
+    return get_cached_movements(date.today())
+
+
+def validate_date_range(start_date: date | None, end_date: date | None) -> None:
+    if start_date is None or end_date is None:
+        return
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=422,
+            detail="start_date must be on or before end_date",
+        )
+    if (end_date - start_date).days > MAX_DATE_RANGE_DAYS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"date range cannot exceed {MAX_DATE_RANGE_DAYS} days",
+        )
 
 
 def filter_movements_by_date(
@@ -259,7 +293,8 @@ def get_metrics(
     category: Category | None = Query(default=None),
     operation_type: OperationType | None = Query(default=None),
 ) -> list[FinancialMovement]:
-    movements = generate_mock_movements(seed=42)
+    validate_date_range(start_date, end_date)
+    movements = get_current_movements()
     filtered = filter_movements(
         movements, start_date, end_date, category, operation_type
     )
@@ -268,7 +303,7 @@ def get_metrics(
 
 @router.get("/api/metrics/facets", response_model=MetricsFacets)
 def get_metrics_facets() -> MetricsFacets:
-    movements = generate_mock_movements(seed=42)
+    movements = get_current_movements()
     return build_metrics_facets(movements)
 
 
@@ -281,7 +316,8 @@ def get_metrics_summary(
     operation_type: OperationType | None = Query(default=None),
     business_type: BusinessType | None = Query(default=None),
 ) -> list[MetricsSummaryItem]:
-    movements = generate_mock_movements(seed=42)
+    validate_date_range(start_date, end_date)
+    movements = get_current_movements()
     if business_type is not None:
         movements = [
             item for item in movements if item.business_type == business_type]
@@ -299,7 +335,8 @@ def get_top_categories(
     end_date: date | None = Query(default=None),
     business_type: BusinessType | None = Query(default=None),
 ) -> list[TopCategoryItem]:
-    movements = generate_mock_movements(seed=42)
+    validate_date_range(start_date, end_date)
+    movements = get_current_movements()
     if business_type is not None:
         movements = [
             item for item in movements if item.business_type == business_type]
@@ -315,7 +352,8 @@ def get_metrics_comparison(
     end_date: date = Query(...),
     business_type: BusinessType | None = Query(default=None),
 ) -> MetricsComparison:
-    movements = generate_mock_movements(seed=42)
+    validate_date_range(start_date, end_date)
+    movements = get_current_movements()
     if business_type is not None:
         movements = [
             item for item in movements if item.business_type == business_type]
@@ -348,13 +386,14 @@ def get_metrics_comparison(
 
 @router.get("/api/metrics/alerts", response_model=list[MetricsAlert])
 def get_metrics_alerts(
-    threshold: float = Query(default=0.3, ge=0),
+    threshold: float = Query(default=0.3, ge=0, le=10),
     group_by: GroupBy = Query(default="month"),
     start_date: date | None = Query(default=None),
     end_date: date | None = Query(default=None),
     business_type: BusinessType | None = Query(default=None),
 ) -> list[MetricsAlert]:
-    movements = generate_mock_movements(seed=42)
+    validate_date_range(start_date, end_date)
+    movements = get_current_movements()
     if business_type is not None:
         movements = [
             item for item in movements if item.business_type == business_type]
@@ -373,8 +412,9 @@ def get_b2b_metrics(
     category: Category | None = Query(default=None),
     operation_type: OperationType | None = Query(default=None),
 ) -> list[FinancialMovement]:
+    validate_date_range(start_date, end_date)
     movements = [
-        movement for movement in generate_mock_movements(seed=42) if movement.business_type == "B2B"
+        movement for movement in get_current_movements() if movement.business_type == "B2B"
     ]
     filtered = filter_movements(
         movements, start_date, end_date, category, operation_type
@@ -389,8 +429,9 @@ def get_b2c_metrics(
     category: Category | None = Query(default=None),
     operation_type: OperationType | None = Query(default=None),
 ) -> list[FinancialMovement]:
+    validate_date_range(start_date, end_date)
     movements = [
-        movement for movement in generate_mock_movements(seed=42) if movement.business_type == "B2C"
+        movement for movement in get_current_movements() if movement.business_type == "B2C"
     ]
     filtered = filter_movements(
         movements, start_date, end_date, category, operation_type

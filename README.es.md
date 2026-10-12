@@ -49,6 +49,18 @@ Si necesitas apuntar a otro backend, copia `frontend/.env.example` como `.env` y
 - Backend: http://localhost:8000
 - Documentación API: http://localhost:8000/docs
 
+El backend local solo acepta los orígenes del frontend `http://localhost:5173`
+y `http://127.0.0.1:5173`, y permite los hosts `localhost`, `127.0.0.1` y
+`testserver`. Puedes reemplazar estos valores con `CORS_ALLOWED_ORIGINS` y
+`ALLOWED_HOSTS` como listas separadas por comas. `APP_ENV=production` activa
+el comportamiento de transporte exclusivo de producción; usa HTTPS antes de
+activarlo.
+
+Docker Compose es el flujo de desarrollo: mantiene `debugpy` en el puerto
+`5678` y activa `--reload`. El comando predeterminado de la imagen del backend
+es seguro para producción: ejecuta Uvicorn sin debugpy ni reload y usa un
+usuario sin privilegios de root.
+
 ### Inicio manual en dos terminales
 
 Usa este flujo cuando no tengas Docker o Docker Compose disponible, cuando necesites depurar solo uno de los servicios o cuando quieras revisar por separado los logs del frontend y del backend. Instala primero Python 3.13+, Node.js y npm.

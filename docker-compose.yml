@@ -19,6 +19,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    environment:
+      APP_ENV: development
+      ALLOWED_HOSTS: localhost,127.0.0.1,backend
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    command: >-
+      python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app
+      --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
       - "5678:5678"
