@@ -144,3 +144,27 @@ Ejecutados desde `frontend/`:
 - `get_errors` -> sin errores en `App.tsx` ni en los dos componentes de gráficos.
 - El bundle inicial se mantiene estable en `188.37 kB`; el ajuste solo añade semántica accesible y no altera el split de Recharts.
 - Lighthouse/axe y lector de pantalla siguen pendientes por la ausencia de `libatk-1.0.so.0` y otras librerías nativas requeridas por Chromium en el contenedor.
+
+## Correcciones posteriores al reporte Lighthouse
+
+### Hallazgos aplicados
+
+- `aria-hidden-focus`: Recharts añadía foco al SVG oculto mediante su capa de accesibilidad. Se añadió `accessibilityLayer={false}` en `income-outcome-chart.tsx` y `profit-percent-chart.tsx`, manteniendo las tablas accesibles como fuente semántica de datos.
+- `definition-list`: `kpi-card.tsx` tenía un `<div>` directo dentro de `<dl>`. El encabezado del KPI y su icono ahora viven dentro de un `<dt>` directo; los valores y textos auxiliares permanecen como `<dd>`.
+
+### Evidencias
+
+- `get_errors` -> sin errores en los tres componentes modificados.
+- El reporte Lighthouse previo identificó score de accesibilidad `0.91` y los dos hallazgos corregidos arriba.
+
+### Validación final
+
+- `npm run lint` -> correcto.
+- `npm test` -> correcto: 1 archivo y 5 pruebas superadas.
+- `npm run build` -> correcto: TypeScript y Vite finalizaron sin errores.
+- `git diff --check` -> correcto.
+- Lighthouse 13.5.0 -> correcto en `frontend/lighthouse-accessibility.json`, generado el `2026-10-12T03:49:09Z` contra `http://127.0.0.1:5173/`.
+- Score final de accesibilidad: `1.0`.
+- `aria-hidden-focus` -> `score: 1`, sin elementos fallidos.
+- `definition-list` -> `score: 1`, sin elementos fallidos.
+- El reporte raíz `lighthouse-accessibility.json` conserva el reporte anterior; el resultado vigente es el archivo generado desde `frontend/`.
