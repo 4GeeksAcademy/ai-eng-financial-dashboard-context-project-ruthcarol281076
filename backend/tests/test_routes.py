@@ -1,3 +1,4 @@
+import random
 from datetime import date
 
 from fastapi.testclient import TestClient
@@ -26,11 +27,76 @@ def test_filter_movements_by_date_includes_range_edges():
     assert all(movement.create_date == target_date for movement in filtered)
 
 
+def test_generate_mock_movements_does_not_change_global_random_state():
+    random.seed(123)
+    expected_next_value = random.random()
+
+    random.seed(123)
+    generate_mock_movements(seed=42)
+
+    assert random.random() == expected_next_value
+
+
+def test_metrics_rejects_invalid_date_ranges():
+    response = client.get(
+        "/api/metrics",
+        params={"start_date": "2025-12-31", "end_date": "2025-01-01"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "start_date must be on or before end_date"
+
+
+def test_metrics_rejects_date_ranges_longer_than_one_year():
+    response = client.get(
+        "/api/metrics",
+        params={"start_date": "2024-01-01", "end_date": "2025-01-02"},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == "date range cannot exceed 366 days"
+
+
+def test_alerts_reject_thresholds_above_configured_limit():
+    response = client.get("/api/metrics/alerts", params={"threshold": 11})
+
+    assert response.status_code == 422
+
+
 def test_health_endpoint_returns_ok():
     response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_security_headers_are_present():
+    response = client.get("/health")
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["permissions-policy"] == "camera=(), microphone=(), geolocation=()"
+
+
+def test_cors_allows_configured_frontend_origin_only():
+    allowed_response = client.get(
+        "/health",
+        headers={"Origin": "http://localhost:5173"},
+    )
+    disallowed_response = client.get(
+        "/health",
+        headers={"Origin": "https://untrusted.example"},
+    )
+
+    assert allowed_response.headers["access-control-allow-origin"] == "http://localhost:5173"
+    assert "access-control-allow-origin" not in disallowed_response.headers
+
+
+def test_unknown_host_is_rejected():
+    response = client.get("/health", headers={"Host": "untrusted.example"})
+
+    assert response.status_code == 400
 
 
 def test_metrics_endpoint_respects_date_filters():

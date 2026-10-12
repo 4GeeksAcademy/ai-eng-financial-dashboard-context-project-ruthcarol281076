@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "accessibility": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "skillPath": "skills/accessibility/SKILL.md",
+      "computedHash": "612f913bcb03f0787b103c848cd7664b676a9aaf31f25d3270cc69cf5caaab95"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+    },
+    "backend-engineer": {
+      "source": "siviter-xyz/dot-agent",
+      "sourceType": "github",
+      "skillPath": "skills/backend-engineer/SKILL.md",
+      "computedHash": "cb334c90d6521d716860c38f5043f5e9726130f69cc429781ae145e65c29a671"
+    },
+    "dashboard-deployment": {
+      "source": "project-local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/dashboard-deployment/SKILL.md",
+      "computedHash": "227bb786ca06ed89e16f1a5f28f98e7661e28ae7f04a59ba702dd55a47ea7665"
+    }
+  }
+}

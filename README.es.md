@@ -43,11 +43,104 @@ docker compose up --build
 ```
 
 El frontend usa por defecto el proxy de Vite para `/api`, así que no necesitas variables de entorno extra ni en desarrollo local ni en Codespaces.
-Si necesitas apuntar a otro backend, copia `frontend/.env.example` como `.env` y define `VITE_API_BASE_URL`.
+Si necesitas apuntar a otro backend desde el navegador, define `VITE_API_BASE_URL`
+en `frontend/.env.local`. Para el proxy del servidor Vite, usa
+`VITE_PROXY_TARGET`.
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:8000
 - Documentación API: http://localhost:8000/docs
+
+El backend local solo acepta los orígenes del frontend `http://localhost:5173`
+y `http://127.0.0.1:5173`, y permite los hosts `localhost`, `127.0.0.1` y
+`testserver`. Puedes reemplazar estos valores con `CORS_ALLOWED_ORIGINS` y
+`ALLOWED_HOSTS` como listas separadas por comas. `APP_ENV=production` activa
+el comportamiento de transporte exclusivo de producción; usa HTTPS antes de
+activarlo.
+
+Docker Compose es el flujo de desarrollo: mantiene `debugpy` en el puerto
+`5678` y activa `--reload`. El comando predeterminado de la imagen del backend
+es seguro para producción: ejecuta Uvicorn sin debugpy ni reload y usa un
+usuario sin privilegios de root.
+
+### Seguridad y rendimiento del backend
+
+El backend usa orígenes CORS y hosts permitidos explícitos mediante
+`CORS_ALLOWED_ORIGINS` y `ALLOWED_HOSTS`, además de cabeceras defensivas. Los
+valores predeterminados de producción son restrictivos y deben reemplazarse por
+los orígenes HTTPS y hosts reales. El dataset mock usa un generador aleatorio
+local y una caché diaria, por lo que las peticiones no modifican el estado
+aleatorio global ni regeneran innecesariamente el mismo dataset. Los datos de
+`generate_mock_movements` no son datos financieros reales.
+
+La imagen segura de producción ejecuta el backend con un usuario sin privilegios,
+sin `debugpy` ni `--reload`. Docker Compose conserva esas funciones solo para
+depuración local.
+
+### Skills del agente
+
+Las skills específicas del proyecto viven en `.agents/skills/`:
+
+- `accessibility`: auditorías WCAG y accesibilidad renderizada.
+- `backend-engineer`: seguridad, APIs y rendimiento del backend.
+- `dashboard-deployment`: Docker Compose, imagen de producción, health checks,
+  validación del proxy y diagnóstico de despliegue.
+- `vercel-react-best-practices`: rendimiento de React y del frontend.
+
+Después de añadir o mover una skill, ejecuta `Developer: Reload Window` desde
+la Command Palette de VS Code para actualizar el catálogo del agente.
+
+### Validación
+
+Ejecuta las comprobaciones del backend desde la raíz del repositorio:
+
+```bash
+pytest backend/tests/test_routes.py
+python -m compileall backend/app
+```
+
+Ejecuta las comprobaciones del frontend desde `frontend/`:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+Con los servicios activos, valida el backend y el proxy de Vite:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/api/metrics
+curl http://localhost:5173/api/metrics
+```
+
+El procedimiento completo de despliegue y la lista de diagnóstico están en
+[`.agents/skills/dashboard-deployment/SKILL.md`](.agents/skills/dashboard-deployment/SKILL.md).
+
+### Inicio manual en dos terminales
+
+Usa este flujo cuando no tengas Docker o Docker Compose disponible, cuando necesites depurar solo uno de los servicios o cuando quieras revisar por separado los logs del frontend y del backend. Instala primero Python 3.13+, Node.js y npm.
+
+En la terminal 1, inicia el backend:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+En la terminal 2, inicia el frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Abre http://localhost:5173. En esta configuración local, Vite redirige las peticiones `/api` a `http://localhost:8000`, por lo que no necesitas definir `VITE_PROXY_TARGET`. El comando manual normal del backend no abre el puerto de depuración `5678`; usa el flujo de Docker Compose cuando necesites esa configuración de depuración.
 
 ---
 
