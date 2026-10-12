@@ -43,7 +43,9 @@ docker compose up --build
 ```
 
 The frontend uses the Vite proxy for `/api` by default, so no extra environment variables are required in local development or Codespaces.
-If you need to target a different backend origin, copy `frontend/.env.example` to `.env` and set `VITE_API_BASE_URL`.
+If you need to target a different backend origin from the browser, set
+`VITE_API_BASE_URL` in `frontend/.env.local`. For the Vite server-side proxy,
+use `VITE_PROXY_TARGET` instead.
 
 - Frontend: http://localhost:5173
 - Backend: http://localhost:8000
@@ -58,6 +60,61 @@ enables production-only transport behavior; use HTTPS before enabling it.
 Docker Compose is the development workflow: it keeps `debugpy` on port `5678`
 and enables `--reload`. The backend image's default command is production-safe:
 it runs Uvicorn without debugpy or reload and uses a non-root user.
+
+### Backend security and performance
+
+The backend uses explicit CORS origins and allowed hosts through
+`CORS_ALLOWED_ORIGINS` and `ALLOWED_HOSTS`, plus defensive response headers.
+Production defaults are restrictive and should be replaced with the real HTTPS
+origins and hosts. The mock dataset uses a local random generator and a daily
+cache, so requests do not mutate global random state or regenerate the same
+dataset unnecessarily. Mock data from `generate_mock_movements` is not real
+financial data.
+
+The production-safe backend image runs as a non-root user without `debugpy` or
+`--reload`. Docker Compose intentionally keeps those development features for
+local debugging only.
+
+### Agent skills
+
+Project-specific agent skills live under `.agents/skills/`:
+
+- `accessibility`: WCAG and rendered accessibility audits.
+- `backend-engineer`: backend security, API and performance guidance.
+- `dashboard-deployment`: Docker Compose, production image, health checks,
+  proxy validation and deployment troubleshooting.
+- `vercel-react-best-practices`: React and frontend performance guidance.
+
+After adding or moving a skill, run `Developer: Reload Window` from the VS Code
+Command Palette so the agent refreshes its skill catalog.
+
+### Validation
+
+Run the backend checks from the repository root:
+
+```bash
+pytest backend/tests/test_routes.py
+python -m compileall backend/app
+```
+
+Run the frontend checks from `frontend/`:
+
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+With services running, validate both the backend and the Vite proxy:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/api/metrics
+curl http://localhost:5173/api/metrics
+```
+
+The complete deployment procedure and troubleshooting checklist is in
+[`.agents/skills/dashboard-deployment/SKILL.md`](.agents/skills/dashboard-deployment/SKILL.md).
 
 ### Manual startup in two terminals
 
