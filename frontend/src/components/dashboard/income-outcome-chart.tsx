@@ -64,7 +64,12 @@ export function IncomeOutcomeChart({ data, loading }: IncomeOutcomeChartProps) {
   const hasData = data.some((d) => d.income > 0 || d.outcome > 0)
 
   return (
-    <Card role="region" aria-labelledby="income-outcome-title" className="border-border/60">
+    <Card
+      role="region"
+      aria-labelledby="income-outcome-title"
+      aria-describedby="income-outcome-description"
+      className="border-border/60"
+    >
       <CardHeader className="pb-4">
         <CardTitle as="h2" id="income-outcome-title" className="text-base font-semibold">
           Income vs. Outcome

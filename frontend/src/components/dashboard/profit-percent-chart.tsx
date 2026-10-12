@@ -66,7 +66,12 @@ export function ProfitPercentChart({ data, loading }: ProfitPercentChartProps) {
   const hasData = data.some((d) => d.profitPercent !== 0)
 
   return (
-    <Card role="region" aria-labelledby="profit-percent-title" className="border-border/60">
+    <Card
+      role="region"
+      aria-labelledby="profit-percent-title"
+      aria-describedby="profit-percent-description"
+      className="border-border/60"
+    >
       <CardHeader className="pb-4">
         <CardTitle as="h2" id="profit-percent-title" className="text-base font-semibold">
           Profit Margin %

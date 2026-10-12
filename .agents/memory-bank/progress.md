@@ -122,3 +122,25 @@ Ejecutados desde `frontend/`:
 - Implementación de performance: completada.
 - Validación estática y de build: completada.
 - Validación visual automatizada con Lighthouse/axe y lector de pantalla: pendiente por dependencias nativas del navegador en el entorno actual.
+
+## Revisión de accesibilidad posterior al lazy loading
+
+### Skill aplicada
+
+- `accessibility` (`.agents/skills/accessibility/SKILL.md`), revisando teclado, foco visible, anuncios dinámicos, regiones de gráficos, tablas alternativas y movimiento reducido después de dividir los chunks.
+
+### Ajustes realizados
+
+- `frontend/src/App.tsx`: el fallback de `Suspense` ahora usa `role="status"`, `aria-live="polite"` y `aria-label="Loading financial charts"`; sus Skeletons siguen marcados como `aria-hidden` para no duplicar ruido semántico.
+- `frontend/src/components/dashboard/income-outcome-chart.tsx`: la región del gráfico ahora enlaza su título y descripción mediante `aria-labelledby` y `aria-describedby`.
+- `frontend/src/components/dashboard/profit-percent-chart.tsx`: la región del gráfico ahora enlaza su título y descripción mediante `aria-labelledby` y `aria-describedby`.
+- Se conservaron el skip link, los estilos `:focus-visible`, las tablas `sr-only`, los estados `role="alert"`/`role="status"` y la regla `prefers-reduced-motion`.
+
+### Evidencias
+
+- `npm run lint` -> correcto.
+- `npm test` -> correcto: 1 archivo y 5 pruebas superadas.
+- `npm run build` -> correcto: TypeScript y Vite finalizaron sin errores.
+- `get_errors` -> sin errores en `App.tsx` ni en los dos componentes de gráficos.
+- El bundle inicial se mantiene estable en `188.37 kB`; el ajuste solo añade semántica accesible y no altera el split de Recharts.
+- Lighthouse/axe y lector de pantalla siguen pendientes por la ausencia de `libatk-1.0.so.0` y otras librerías nativas requeridas por Chromium en el contenedor.

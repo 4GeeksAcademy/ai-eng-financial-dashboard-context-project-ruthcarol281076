@@ -33,12 +33,14 @@ async function fetchFinancialData(signal: AbortSignal): Promise<FinancialMovemen
 function ChartLoadingFallback() {
   return (
     <div
-      aria-hidden="true"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading financial charts"
       className="rounded-lg border border-border/60 bg-card p-6"
     >
-      <Skeleton className="h-5 w-52" />
-      <Skeleton className="mt-2 h-3 w-64" />
-      <Skeleton className="mt-6 h-[280px] w-full rounded-lg" />
+      <Skeleton aria-hidden="true" className="h-5 w-52" />
+      <Skeleton aria-hidden="true" className="mt-2 h-3 w-64" />
+      <Skeleton aria-hidden="true" className="mt-6 h-[280px] w-full rounded-lg" />
     </div>
   );
 }
