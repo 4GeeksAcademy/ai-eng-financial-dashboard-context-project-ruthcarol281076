@@ -193,3 +193,20 @@ Ejecutados desde `frontend/`:
 - `git diff --check` -> correcto.
 - `pip-audit` queda pendiente porque no está instalado.
 - La construcción Docker queda bloqueada por un error interno reproducible de BuildKit (`parent snapshot ... does not exist`) durante `COPY requirements.txt`, antes de ejecutar el Dockerfile.
+
+## Skill de despliegue del dashboard
+
+### Cambios realizados
+
+- Se creó `.agents/skills/dashboard-deployment/SKILL.md` con frontmatter compatible y activación para tareas de despliegue, Docker, Compose, variables, health checks, proxy y troubleshooting.
+- La skill documenta el despliegue local con Docker Compose, la imagen segura de producción del backend, los puertos `5173`, `8000` y `5678`, `/docs`, `/health`, `/openapi.json` y `/api/metrics`.
+- Se documentaron `APP_ENV`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `VITE_PROXY_TARGET` y la diferencia entre `VITE_PROXY_TARGET` y `VITE_API_BASE_URL`.
+- Se incluyeron controles para preservar lazy loading, `Suspense`, tablas `sr-only`, regiones ARIA y `accessibilityLayer={false}`.
+- `skills-lock.json` registra `dashboard-deployment` como skill local con el hash `227bb786ca06ed89e16f1a5f28f98e7661e28ae7f04a59ba702dd55a47ea7665`.
+
+### Evidencias
+
+- Validación del frontmatter y comandos esenciales de la skill -> correcta.
+- La ruta registrada coincide con `.agents/skills/dashboard-deployment/SKILL.md`.
+- La skill quedó disponible junto a `accessibility`, `backend-engineer` y `vercel-react-best-practices`.
+- Para que VS Code recargue el catálogo de skills, ejecutar `Developer: Reload Window` desde la Command Palette.

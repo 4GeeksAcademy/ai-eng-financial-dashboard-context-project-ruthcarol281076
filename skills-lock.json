@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/backend-engineer/SKILL.md",
       "computedHash": "cb334c90d6521d716860c38f5043f5e9726130f69cc429781ae145e65c29a671"
+    },
+    "dashboard-deployment": {
+      "source": "project-local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/dashboard-deployment/SKILL.md",
+      "computedHash": "227bb786ca06ed89e16f1a5f28f98e7661e28ae7f04a59ba702dd55a47ea7665"
     }
   }
 }
